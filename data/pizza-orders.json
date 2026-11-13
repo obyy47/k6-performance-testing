@@ -1,0 +1,37 @@
+[
+    {
+        "maxCaloriesPerSlice": 400,
+        "mustBeVegetarian": true,
+        "excludedIngredients": [
+            "anchovies"
+        ],
+        "maxNumberOfToppings": 3,
+        "minNumberOfToppings": 1
+    },
+    {
+        "maxCaloriesPerSlice": 650,
+        "mustBeVegetarian": false,
+        "excludedIngredients": [
+            "pineapple"
+        ],
+        "maxNumberOfToppings": 5,
+        "minNumberOfToppings": 2
+    },
+    {
+        "maxCaloriesPerSlice": 800,
+        "mustBeVegetarian": false,
+        "excludedIngredients": [],
+        "maxNumberOfToppings": 6,
+        "minNumberOfToppings": 3
+    },
+    {
+        "maxCaloriesPerSlice": 500,
+        "mustBeVegetarian": true,
+        "excludedIngredients": [
+            "mushrooms",
+            "olives"
+        ],
+        "maxNumberOfToppings": 4,
+        "minNumberOfToppings": 2
+    }
+]
