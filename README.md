@@ -1,124 +1,150 @@
-# QuickPizza API Performance & Load Testing Suite (Grafana k6)
+# k6 Performance Testing — QuickPizza API
 
-![k6 Smoke Test CI](https://github.com/obyy47/k6-performance-testing/actions/workflows/k6-ci.yml/badge.svg)
+![k6 Performance CI](https://github.com/obyy47/k6-performance-testing/actions/workflows/k6-ci.yml/badge.svg)
 ![Grafana k6](https://img.shields.io/badge/Tested%20with-Grafana%20k6-7D64FF?logo=k6&logoColor=white)
-![JavaScript](https://img.shields.io/badge/Language-JavaScript%20(ES6+)-F7DF1E?logo=javascript&logoColor=black)
+![JavaScript](https://img.shields.io/badge/Language-JavaScript%20(ES6%2B)-F7DF1E?logo=javascript&logoColor=black)
 
-An end-to-end API performance, load, stress, and spike testing framework built with **Grafana k6**, targeting the [QuickPizza API](https://quickpizza.grafana.com). This repository demonstrates modern performance engineering practices—including multi-stage traffic simulation, data parameterization (`SharedArray`), automated SLA threshold assertions, HTML reporting, and Continuous Integration via GitHub Actions.
+A portfolio project using **Grafana k6** to practice API performance testing across five scenarios: Smoke, Load, Stress, Spike, and Data-Driven.
 
-![k6 Spike Test Dashboard](screenshots/spike-report.png)
+> **Scope Note:** QuickPizza handles the `GET` and `POST` flows; JSONPlaceholder handles the `PUT`, `PATCH`, and `DELETE` examples. They are separate demo services, not one connected CRUD workflow.
 
----
+## Project Overview
 
-## Key Highlights & Engineering Features
+| API target | Purpose | Endpoints / methods |
+|---|---|---|
+| [QuickPizza](https://quickpizza.grafana.com) | Browse menu, retrieve a login token, and submit a pizza request | `GET /`, `GET /?menu={tag}`, `POST /api/users/token/login`, `POST /api/pizza` |
+| [JSONPlaceholder](https://jsonplaceholder.typicode.com) | Demonstrate resource update and delete requests | `PUT`, `PATCH`, `DELETE /posts/{id}` |
 
-* **Comprehensive Test Coverage:** Five dedicated test suites covering **Smoke**, **Load**, **Data-Driven**, **Stress**, and **Spike** testing scenarios.
-* **Data Parameterization:** Uses k6's `SharedArray` to load randomized order payloads from an external JSON dataset (`data/pizza-orders.json`), so requests vary between iterations instead of repeating one identical payload.
-* **Automated SLA Enforcement (`Thresholds`):** Built-in pass/fail quality gates enforcing strict 95th percentile (`p95`) response time limits, check pass rates, and near-zero HTTP failure rates.
-* **Transactional API Validation:** Simulates realistic user journeys (`GET /` followed by authenticated `POST /api/pizza` requests) with deep JSON payload assertions.
-* **Automated HTML Visual Reporting:** Integrated with `k6-reporter` to automatically generate interactive HTML dashboards (`reports/spike-summary.html`).
-* **Continuous Integration (CI):** Configured with **GitHub Actions** (`.github/workflows/k6-ci.yml`) to automatically execute smoke tests on every push and pull request to `main`.
+### Key implementation features
 
----
+- **Token correlation:** extracts the returned QuickPizza login token and passes it in the pizza request's `Authorization` header, with fallback handling.
+- **Shared data:** loads 10 JSON order profiles with k6 `SharedArray`; iterations select records cyclically by index.
+- **Custom Trend metrics:** `flow_browse_duration`, `flow_checkout_duration`, `flow_cart_update_duration`, and `flow_order_manage_duration` track business-flow durations.
+- **Weighted workloads:** Load, Stress, and Spike use probability-based flow selection.
+- **Response validation:** checks HTTP status codes and selected response content, including token and pizza fields.
+- **HTML reporting:** each test writes `reports/<test-name>-summary.html` through `k6-reporter`.
+- **Environment variables:** supports API URL overrides and QuickPizza login values.
+- **GitHub Actions:** runs Smoke and Data-Driven tests on pushes and pull requests to `main` or `master`.
+
+## Test Scenarios & Configuration
+
+| Scenario | VU stages / profile | Duration | Workload and methods |
+|---|---|---:|---|
+| **Smoke** | 2 fixed VUs | 10 s | Browse, login, pizza request, then JSONPlaceholder update/delete examples; `GET`, `POST`, `PUT`, `PATCH`, `DELETE` |
+| **Load** | 0→15 (10 s), hold 25 s, 15→0 (10 s) | 45 s | 70% browse, 20% checkout, 10% cart update; `GET`, `POST`, `PUT`, `PATCH` |
+| **Stress** | 0→15 (10 s) →35 (15 s) →60 (15 s) →0 (10 s) | 50 s | 50% browse, 40% checkout, 10% update/delete; `GET`, `POST`, `PUT`, `DELETE` |
+| **Spike** | 0→5 (10 s), 5→100 (5 s), hold 15 s, 100→5 (5 s), 5→0 (10 s) | 45 s | 70% browse, 30% checkout; `GET`, `POST` |
+| **Data-Driven** | 0→10 (5 s), hold 20 s, 10→0 (5 s) | 30 s | Uses JSON order profiles for menu search, login, pizza request, PUT, and PATCH; `GET`, `POST`, `PUT`, `PATCH` |
+
+### Project-defined k6 thresholds
+
+| Scenario | `http_req_duration` P95 | `http_req_failed` | `checks` |
+|---|---:|---:|---:|
+| Smoke | `< 2,000 ms` | `< 1%` | `> 99%` |
+| Load | `< 1,500 ms` | `< 1%` | `> 99%` |
+| Stress | `< 2,500 ms` | `< 5%` | `> 99%` |
+| Spike | `< 3,000 ms` | `< 5%` | `> 99%` |
+| Data-Driven | `< 1,500 ms` | `< 1%` | `> 99%` |
+
+## Captured Test Results
+
+| Test | HTTP requests | P95 | Failed requests | Checks passed |
+|---|---:|---:|---:|---:|
+| Smoke | 24 | 904.10 ms | 0% (0) | 48/48 (100%) |
+| Load | 514 | 295.84 ms | 0% (0) | 1,088/1,088 (100%) |
+| Stress | 2,425 | 274.35 ms | 0% (0) | 5,346/5,346 (100%) |
+| Spike | 3,290 | 259.69 ms | 0% (0) | 7,329/7,329 (100%) |
+| Data-Driven | 435 | 289.11 ms | 0% (0) | 957/957 (100%) |
 
 ## Repository Structure
 
 ```text
 k6-performance-testing/
-├── .github/
-│   └── workflows/
-│       └── k6-ci.yml            # GitHub Actions workflow for automated CI smoke testing
-├── data/
-│   └── pizza-orders.json        # Parameterized JSON payloads for data-driven testing
-├── tests/
-│   ├── smoke-test.js            # Baseline health & script verification (2 VUs, 10s)
-│   ├── load-test.js             # Normal daily traffic simulation (10 VUs, 40s)
-│   ├── data-driven-test.js      # Randomized payload load test via SharedArray (15 VUs, 40s)
-│   ├── stress-test.js           # High-load capacity & breaking-point testing (50 VUs, 50s)
-│   └── spike-test.js            # Sudden flash-sale surge simulation (5 -> 120 VUs, 45s)
-├── reports/
-│   └── spike-summary.html       # Auto-generated HTML visual test summary
-├── screenshots/
-│   ├── spike-report.png         # Preview of the HTML performance dashboard
-│   ├── smoke-test-terminal.png  # k6 terminal summary: smoke test
-│   ├── load-test-terminal.png   # k6 terminal summary: load test
-│   ├── data-driven-test-terminal.png  # k6 terminal summary: data-driven test
-│   └── stress-test-terminal.png # k6 terminal summary: stress test
+├── .github/workflows/k6-ci.yml
+├── data/pizza-orders.json        # 10 order profiles
+├── reports/.gitkeep              # Generated reports are gitignored
+├── screenshots/                  # Terminal and HTML report evidence
+├── tests/                         # Five k6 test scripts
+├── utils/helpers.js               # Shared requests, checks, and summary handler
+├── run-all-tests.bat              # Windows runner
+├── run-all-tests.sh               # macOS / Linux runner
 ├── .gitignore
 └── README.md
 ```
 
----
-
-## Performance Benchmark Summary
-
-All test suites were executed against `https://quickpizza.grafana.com` and validated against predefined Service Level Agreements (SLAs):
-
-| Test Scenario | Peak VUs | Total Requests | Throughput (RPS) | Avg Latency | p(95) Latency | Error Rate | SLA Threshold | Status |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Smoke Test** | 2 | 16 | 1.29 req/s | 382.85 ms | 889.23 ms | 0.00% | `p(95) < 2000ms` | PASS |
-| **Load Test** | 10 | 242 | 6.02 req/s | 287.41 ms | 384.60 ms | 0.00% | `p(95) < 800ms` | PASS |
-| **Data-Driven Test** | 15 | 345 | 8.58 req/s | 320.87 ms | 412.99 ms | 0.00% | `p(95) < 800ms` | PASS |
-| **Stress Test** | 50 | 1,548 | 30.49 req/s | 278.09 ms | 353.88 ms | 0.00% | `p(95) < 1500ms` | PASS |
-| **Spike Test** | 120 | 3,230 | 69.92 req/s | 277.01 ms | 353.47 ms | 0.00% | `p(95) < 2000ms` | PASS |
-
-Every suite also enforces `http_req_failed` (error rate) and `checks: rate > 0.99` thresholds, and all checks passed in each run.
-
-### Key Analytical Findings
-1. **High Resilience Under Sudden Traffic Surges:** During the **Spike Test** (an abrupt 24x jump from 5 to 120 concurrent virtual users within 5 seconds), the target endpoint successfully processed **3,230 requests** at **69.92 req/s** with **0.00% HTTP errors** and **100% functional check pass rates**.
-2. **Stable Latency Under Varied Payloads:** During the **Data-Driven Test**, latency stayed stable under randomized JSON payloads (`p(95)` at **412.99 ms**), indicating consistent API response times when requests vary.
-
-### Notes
-* **Test Target & Environment:** All benchmarks target Grafana's public demo service ([QuickPizza](https://quickpizza.grafana.com)) and were executed from a local client machine (which includes public internet network latency). Therefore, the recorded metrics are indicative of end-to-end client-side behavior rather than isolated internal server capacity.
-* **Concurrent Runs:** Some suites were run at the same time in separate terminals on the same machine, so shared local resources and network bandwidth may have influenced individual results (for example the smoke test p(95)). For isolated numbers, run each suite on its own.
-
----
-
-## Test Run Screenshots
-
-Terminal summaries from the k6 runs (thresholds, checks, and HTTP metrics):
-
-| Smoke Test | Load Test |
-| :---: | :---: |
-| ![Smoke test](screenshots/smoke-test-terminal.png) | ![Load test](screenshots/load-test-terminal.png) |
-
-| Data-Driven Test | Stress Test |
-| :---: | :---: |
-| ![Data-driven test](screenshots/data-driven-test-terminal.png) | ![Stress test](screenshots/stress-test-terminal.png) |
-
----
-
 ## Getting Started
 
-### Prerequisites
-* [Grafana k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) installed locally:
-  * **Windows:** `winget install k6 --source winget`
-  * **macOS:** `brew install k6`
+**Prerequisite:** Install [Grafana k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) and ensure access to the demo APIs and the remote JavaScript libraries imported by `utils/helpers.js`.
 
-### Installation & Execution
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/obyy47/k6-performance-testing.git
-   cd k6-performance-testing
-   ```
+```bash
+# Verify installation
+k6 version
 
-2. **Run individual test suites:**
-   ```bash
-   # 1. Baseline Smoke Test
-   k6 run tests/smoke-test.js
+# Run an individual scenario from the repository root
+k6 run tests/smoke-test.js
+k6 run tests/load-test.js
+k6 run tests/stress-test.js
+k6 run tests/spike-test.js
+k6 run tests/data-driven-test.js
 
-   # 2. Normal Load Test
-   k6 run tests/load-test.js
+# Run all scenarios on macOS / Linux
+chmod +x run-all-tests.sh
+./run-all-tests.sh
+```
 
-   # 3. Data-Driven Load Test (SharedArray)
-   k6 run tests/data-driven-test.js
+On Windows Command Prompt, run `run-all-tests.bat`. Each test writes an HTML summary to `reports/` (`smoke-summary.html`, `load-summary.html`, `stress-summary.html`, `spike-summary.html`, or `data-driven-summary.html`). Generated HTML reports are excluded by `.gitignore`.
 
-   # 4. High-Load Stress Test
-   k6 run tests/stress-test.js
+### Environment variables
 
-   # 5. Extreme Spike Test (generates HTML report)
-   k6 run tests/spike-test.js
-   ```
+| Variable | Default |
+|---|---|
+| `QUICKPIZZA_URL` | `https://quickpizza.grafana.com` |
+| `PLACEHOLDER_URL` | `https://jsonplaceholder.typicode.com` |
+| `QP_USERNAME` | `default` |
+| `QP_PASSWORD` | `default` |
 
-3. **Inspect the Visual Report:**
-   After running `tests/spike-test.js`, open `reports/spike-summary.html` in any web browser to view detailed latency percentiles, request rates, and check breakdowns.
+Example: `QP_USERNAME="your-username" QP_PASSWORD="your-password" k6 run tests/smoke-test.js` (macOS / Linux).
+
+## Continuous Integration
+
+`.github/workflows/k6-ci.yml` runs on pushes to `main` / `master` and pull requests targeting those branches. It executes `tests/smoke-test.js` and `tests/data-driven-test.js`, then uploads `reports/` as the `k6-performance-reports` artifact with a 14-day retention period.
+
+## Evidence — expand a section to view each capture
+
+<details>
+<summary>Smoke Test — terminal output</summary>
+<img src="screenshots/smoke-test-terminal.png" alt="Smoke Test terminal output" />
+</details>
+
+<details>
+<summary>Load Test — terminal output</summary>
+<img src="screenshots/load-test-terminal.png" alt="Load Test terminal output" />
+</details>
+
+<details>
+<summary>Stress Test — terminal output</summary>
+<img src="screenshots/stress-test-terminal.png" alt="Stress Test terminal output" />
+</details>
+
+<details>
+<summary>Spike Test — terminal output</summary>
+<img src="screenshots/spike-test-terminal.png" alt="Spike Test terminal output" />
+</details>
+
+<details>
+<summary>Data-Driven Test — terminal output</summary>
+<img src="screenshots/data-driven-test-terminal.png" alt="Data-Driven Test terminal output" />
+</details>
+
+<details>
+<summary>Stress Test — HTML summary report</summary>
+<img src="screenshots/stress-summary-html-report.png" alt="Stress Test HTML summary report" />
+</details>
+
+## Limitations & Disclaimer
+
+- Tests target public demo services; results are individual captured runs and may vary. P95 is aggregated across requests, not reported per endpoint.
+- The project validates client-visible HTTP responses only; it does not include server-side monitoring, database verification, or infrastructure metrics. Thresholds are practice criteria, not provider SLAs.
+- The QuickPizza login helper uses a fallback token when no token is returned; that fallback does not establish a successfully authenticated session.
+- The Windows batch runner continues through commands without a consolidated failure status; the shell runner stops on the first failed command.
+- Use modest load against public demos. Run high-volume tests only against systems you own or are explicitly authorized to test.

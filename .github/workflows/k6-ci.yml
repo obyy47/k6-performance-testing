@@ -1,19 +1,35 @@
-name: k6 Performance Smoke Test
+name: k6 Performance CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
 
 jobs:
-  k6-smoke-test:
+  k6-smoke-and-data-driven:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run k6 Smoke Test
+      - name: Create reports directory
+        run: mkdir -p reports
+
+      - name: Run k6 Smoke Test (All HTTP Methods)
         uses: grafana/k6-action@v0.3.1
         with:
           filename: tests/smoke-test.js
+
+      - name: Run k6 Data-Driven Test (SharedArray)
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: tests/data-driven-test.js
+
+      - name: Upload k6 HTML Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-performance-reports
+          path: reports/
+          retention-days: 14

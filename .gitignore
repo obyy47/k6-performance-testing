@@ -9,3 +9,7 @@ Desktop.ini
 
 # Dependencies
 node_modules/
+
+# Generated HTML reports (created locally during test runs)
+reports/*.html
+!reports/stress-summary.html

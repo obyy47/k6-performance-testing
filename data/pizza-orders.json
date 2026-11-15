@@ -1,37 +1,132 @@
 [
     {
-        "maxCaloriesPerSlice": 400,
-        "mustBeVegetarian": true,
-        "excludedIngredients": [
+        "post_id": 1,
+        "search_tag": "margherita",
+        "custom_name": "Classic Margherita Light",
+        "max_calories": 400,
+        "is_vegetarian": true,
+        "excluded_ingredients": [
             "anchovies"
         ],
-        "maxNumberOfToppings": 3,
-        "minNumberOfToppings": 1
+        "min_toppings": 1,
+        "max_toppings": 3,
+        "update_note": "Order #1 updated: extra fresh basil and thin crust"
     },
     {
-        "maxCaloriesPerSlice": 650,
-        "mustBeVegetarian": false,
-        "excludedIngredients": [
+        "post_id": 2,
+        "search_tag": "pepperoni",
+        "custom_name": "Double Pepperoni Feast",
+        "max_calories": 650,
+        "is_vegetarian": false,
+        "excluded_ingredients": [
             "pineapple"
         ],
-        "maxNumberOfToppings": 5,
-        "minNumberOfToppings": 2
+        "min_toppings": 2,
+        "max_toppings": 5,
+        "update_note": "Order #2 updated: add chili flakes on the side"
     },
     {
-        "maxCaloriesPerSlice": 800,
-        "mustBeVegetarian": false,
-        "excludedIngredients": [],
-        "maxNumberOfToppings": 6,
-        "minNumberOfToppings": 3
+        "post_id": 3,
+        "search_tag": "meat-lovers",
+        "custom_name": "Ultimate Meat Overload",
+        "max_calories": 850,
+        "is_vegetarian": false,
+        "excluded_ingredients": [],
+        "min_toppings": 3,
+        "max_toppings": 6,
+        "update_note": "Order #3 updated: barbecue sauce drizzle requested"
     },
     {
-        "maxCaloriesPerSlice": 500,
-        "mustBeVegetarian": true,
-        "excludedIngredients": [
+        "post_id": 4,
+        "search_tag": "veggie",
+        "custom_name": "Garden Veggie Supreme",
+        "max_calories": 450,
+        "is_vegetarian": true,
+        "excluded_ingredients": [
             "mushrooms",
             "olives"
         ],
-        "maxNumberOfToppings": 4,
-        "minNumberOfToppings": 2
+        "min_toppings": 2,
+        "max_toppings": 4,
+        "update_note": "Order #4 updated: gluten-free dough preference"
+    },
+    {
+        "post_id": 5,
+        "search_tag": "cheese",
+        "custom_name": "Quattro Formaggi Melt",
+        "max_calories": 700,
+        "is_vegetarian": true,
+        "excluded_ingredients": [
+            "anchovies",
+            "onions"
+        ],
+        "min_toppings": 2,
+        "max_toppings": 4,
+        "update_note": "Order #5 updated: extra mozzarella crust"
+    },
+    {
+        "post_id": 6,
+        "search_tag": "spicy",
+        "custom_name": "Diavola Jalapeno Inferno",
+        "max_calories": 600,
+        "is_vegetarian": false,
+        "excluded_ingredients": [
+            "pineapple"
+        ],
+        "min_toppings": 2,
+        "max_toppings": 5,
+        "update_note": "Order #6 updated: medium spice level confirmed"
+    },
+    {
+        "post_id": 7,
+        "search_tag": "truffle",
+        "custom_name": "Truffle Mushroom Bianco",
+        "max_calories": 550,
+        "is_vegetarian": true,
+        "excluded_ingredients": [
+            "anchovies"
+        ],
+        "min_toppings": 1,
+        "max_toppings": 3,
+        "update_note": "Order #7 updated: deliver to main lobby"
+    },
+    {
+        "post_id": 8,
+        "search_tag": "hawaiian",
+        "custom_name": "Tropical Smoked Beef",
+        "max_calories": 620,
+        "is_vegetarian": false,
+        "excluded_ingredients": [
+            "olives"
+        ],
+        "min_toppings": 2,
+        "max_toppings": 4,
+        "update_note": "Order #8 updated: cut into 8 slices"
+    },
+    {
+        "post_id": 9,
+        "search_tag": "mediterranean",
+        "custom_name": "Mediterranean Feta Olive",
+        "max_calories": 480,
+        "is_vegetarian": true,
+        "excluded_ingredients": [
+            "anchovies"
+        ],
+        "min_toppings": 2,
+        "max_toppings": 5,
+        "update_note": "Order #9 updated: include oregano packets"
+    },
+    {
+        "post_id": 10,
+        "search_tag": "bbq-chicken",
+        "custom_name": "Smoky BBQ Chicken Ranch",
+        "max_calories": 750,
+        "is_vegetarian": false,
+        "excluded_ingredients": [
+            "mushrooms"
+        ],
+        "min_toppings": 3,
+        "max_toppings": 6,
+        "update_note": "Order #10 updated: contactless drop-off"
     }
 ]
